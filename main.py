@@ -60,7 +60,7 @@ class Plugin:
                 if '"path"' in line:
                     path = line.split('"path"')[1].strip().strip('"').replace("\\\\", "/")
                     library_paths.append(path)
-
+        
         for library_path in library_paths:
             manifest_path = Path(library_path) / "steamapps" / f"appmanifest_{appid}.acf"
             if manifest_path.exists():
@@ -317,7 +317,7 @@ class Plugin:
         except Exception as e:
             decky.logger.error(str(e))
             return {"status": "error", "message": str(e)}
-
+    
     async def list_installed_games(self) -> dict:
         try:
             steam_root = Path(decky.HOME) / ".steam" / "steam"
@@ -352,11 +352,29 @@ class Plugin:
                             games.append(game_info)
 
             filtered_games = [g for g in games if "Proton" not in g["name"] and "Steam Linux Runtime" not in g["name"]]
+            
+            filtered_games = collect_non_steam_games(filtered_games)
+            
             return {"status": "success", "games": filtered_games}
 
         except Exception as e:
             decky.logger.error(str(e))
             return {"status": "error", "message": str(e)}
+
+    def collect_non_steam_games(self, filtered_games: list) -> list:
+        try:
+            steam_root = Path(decky.HOME) / ".steam" / "steam"
+            #TODO - how to get the userid in case there are several
+            shortcuts_file = steam_root / "userdata" / USERID / "config" / "shortcuts.vdf"
+            
+            if not shortcuts_file.exists():
+                return filtered_games
+            
+            return filtered_games    
+            
+        except Exception as e:
+            decky.logger.error("The following error ocurred while scanning for non-Steam Games: " + str(e))
+            return filtered_games
 
     async def log_error(self, error: str) -> None:
         decky.logger.error(f"FRONTEND: {error}")
