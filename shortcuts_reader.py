@@ -1,13 +1,10 @@
 def read_shortcuts_file(self) -> list:
     games = []
-
     try:
-
         with open("./shortcuts.vdf", 'rb') as f:
             shortcuts = str(f.read()).split('\\x00\\x02')
 
         for line in shortcuts:
-
             if 'appid\\x00' not in line or "emulation" in line.lower():
                 continue
 
@@ -34,7 +31,6 @@ def read_shortcuts_file(self) -> list:
 
             if exe:
                 games.append({"Name": name, "Exe": exe, "Path": path})
-
 
     except Exception as e:
         return []

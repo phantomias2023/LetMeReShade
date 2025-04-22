@@ -20,7 +20,7 @@ class Plugin:
         self.main_path = os.path.join(self.environment['XDG_DATA_HOME'], 'reshade')
         self.vkbasalt_base_path = os.path.join(self.environment['XDG_DATA_HOME'], 'vkbasalt')
         self.vkbasalt_path = os.path.join(self.vkbasalt_base_path, 'installation')
-        
+
         # Create necessary directories
         os.makedirs(self.main_path, exist_ok=True)
         os.makedirs(self.vkbasalt_path, exist_ok=True)
@@ -60,7 +60,7 @@ class Plugin:
                 if '"path"' in line:
                     path = line.split('"path"')[1].strip().strip('"').replace("\\\\", "/")
                     library_paths.append(path)
-        
+
         for library_path in library_paths:
             manifest_path = Path(library_path) / "steamapps" / f"appmanifest_{appid}.acf"
             if manifest_path.exists():
@@ -69,7 +69,7 @@ class Plugin:
                         if '"installdir"' in line:
                             install_dir = line.split('"installdir"')[1].strip().strip('"')
                             base_path = Path(library_path) / "steamapps" / "common" / install_dir
-                            
+
                             # Get name of the game directory for smarter exe matching
                             game_name = install_dir.lower().replace("_", " ").replace("-", " ")
                             game_words = set(word.strip() for word in game_name.split())
@@ -77,7 +77,7 @@ class Plugin:
                             def score_executable(exe_path: Path) -> float:
                                 if not exe_path.is_file():
                                     return 0
-                                    
+
                                 name = exe_path.stem.lower()
                                 score = 0
 
@@ -127,11 +127,11 @@ class Plugin:
                                 return best_exe, best_score
 
                             best_path, score = find_best_exe(base_path)
-                            
+
                             if best_path and score > 0:
                                 decky.logger.info(f"Found game executable directory: {best_path} (score: {score})")
                                 return str(best_path)
-                            
+
                             decky.logger.info(f"No suitable executable found, using base path: {base_path}")
                             return str(base_path)
 
@@ -148,10 +148,10 @@ class Plugin:
 
             # Create a new environment dictionary for this installation
             install_env = self.environment.copy()
-            
+
             # Explicitly set RESHADE_ADDON_SUPPORT based on the with_addon parameter
             install_env['RESHADE_ADDON_SUPPORT'] = '1' if with_addon else '0'
-            
+
             # Add other necessary environment variables
             install_env.update({
                 'LD_LIBRARY_PATH': '/usr/lib',
@@ -202,7 +202,7 @@ class Plugin:
         try:
             assets_dir = Path(decky.DECKY_PLUGIN_DIR) / "defaults" / "assets"
             script_path = assets_dir / "vkbasalt-install.sh"
-            
+
             if not script_path.exists():
                 decky.logger.error(f"VkBasalt install script not found: {script_path}")
                 return {"status": "error", "message": "VkBasalt install script not found"}
@@ -224,7 +224,7 @@ class Plugin:
 
             marker_file = Path(self.vkbasalt_base_path) / ".installed"
             marker_file.touch()
-            
+
             return {"status": "success", "output": "VkBasalt installed successfully!"}
         except Exception as e:
             decky.logger.error(f"VkBasalt install error: {str(e)}")
@@ -234,7 +234,7 @@ class Plugin:
         try:
             assets_dir = Path(decky.DECKY_PLUGIN_DIR) / "defaults" / "assets"
             script_path = assets_dir / "reshade-uninstall.sh"
-            
+
             if not script_path.exists():
                 return {"status": "error", "message": "Uninstall script not found"}
 
@@ -245,7 +245,7 @@ class Plugin:
                 capture_output=True,
                 text=True
             )
-            
+
             if process.returncode != 0:
                 return {"status": "error", "message": process.stderr}
 
@@ -253,7 +253,7 @@ class Plugin:
             marker_file = Path(self.main_path) / ".installed"
             if marker_file.exists():
                 marker_file.unlink()
-                
+
             return {"status": "success", "output": "ReShade uninstalled"}
         except Exception as e:
             decky.logger.error(str(e))
@@ -263,7 +263,7 @@ class Plugin:
         try:
             assets_dir = Path(decky.DECKY_PLUGIN_DIR) / "defaults" / "assets"
             script_path = assets_dir / "vkbasalt-uninstall.sh"
-            
+
             if not script_path.exists():
                 return {"status": "error", "message": "VkBasalt uninstall script not found"}
 
@@ -274,14 +274,14 @@ class Plugin:
                 capture_output=True,
                 text=True
             )
-            
+
             if process.returncode != 0:
                 return {"status": "error", "message": process.stderr}
 
             marker_file = Path(self.vkbasalt_base_path) / ".installed"
             if marker_file.exists():
                 marker_file.unlink()
-                    
+
             return {"status": "success", "output": "VkBasalt uninstalled"}
         except Exception as e:
             decky.logger.error(str(e))
@@ -291,7 +291,7 @@ class Plugin:
         try:
             assets_dir = Path(decky.DECKY_PLUGIN_DIR) / "defaults" / "assets"
             script_path = assets_dir / "reshade-game-manager.sh"
-            
+
             try:
                 game_path = self._find_game_path(appid)
                 decky.logger.info(f"Found game path: {game_path}")
@@ -301,7 +301,7 @@ class Plugin:
             cmd = ["/bin/bash", str(script_path), action, game_path, dll_override]
             if vulkan_mode:
                 cmd.extend([vulkan_mode, os.path.expanduser(f"~/.local/share/Steam/steamapps/compatdata/{appid}")])
-            
+
             process = subprocess.run(
                 cmd,
                 cwd=str(assets_dir),
@@ -309,15 +309,15 @@ class Plugin:
                 capture_output=True,
                 text=True
             )
-            
+
             if process.returncode != 0:
                 return {"status": "error", "message": process.stderr}
-                
+
             return {"status": "success", "output": process.stdout}
         except Exception as e:
             decky.logger.error(str(e))
             return {"status": "error", "message": str(e)}
-    
+
     async def list_installed_games(self) -> dict:
         try:
             steam_root = Path(decky.HOME) / ".steam" / "steam"
@@ -352,9 +352,9 @@ class Plugin:
                             games.append(game_info)
 
             filtered_games = [g for g in games if "Proton" not in g["name"] and "Steam Linux Runtime" not in g["name"]]
-            
+
             filtered_games = collect_non_steam_games(filtered_games)
-            
+
             return {"status": "success", "games": filtered_games}
 
         except Exception as e:
@@ -363,18 +363,60 @@ class Plugin:
 
     def collect_non_steam_games(self, filtered_games: list) -> list:
         try:
-            steam_root = Path(decky.HOME) / ".steam" / "steam"
-            #TODO - how to get the userid in case there are several
-            shortcuts_file = steam_root / "userdata" / USERID / "config" / "shortcuts.vdf"
-            
+            steam_userdata = Path(decky.HOME) / ".steam" / "steam" / "userdata"
+            #TODO: a better way to get the USER_ID (== foldername) - currently it is assumed that only one of those exist on the device
+            shortcuts_file = steam_userdata / os.listdir(steam_userdata)[0] / "config" / "shortcuts.vdf"
+
             if not shortcuts_file.exists():
                 return filtered_games
-            
-            return filtered_games    
-            
+
+            non_steam_games = read_shortcuts_file(shortcuts_file)
+
+            return filtered_games
+
         except Exception as e:
             decky.logger.error("The following error ocurred while scanning for non-Steam Games: " + str(e))
             return filtered_games
+
+    def read_shortcuts_file(self, shortcuts_file) -> dict:
+        games = []
+        try:
+            with open(shortcuts_file, 'rb') as f:
+                shortcuts = str(f.read()).split('\\x00\\x02')
+
+            for line in shortcuts:
+                if 'appid\\x00' not in line or "emulation" in line.lower():
+                    continue
+
+                gamedata = line.split('\\x00')
+                name = ''
+                exe = ''
+                path = ''
+
+                for index in range(len(gamedata)):
+                    if '\\x01AppName' in gamedata[index]:
+                        name = gamedata[index+1].replace('\\', '')
+                        continue
+                    elif gamedata[index] == '\\x01Exe':
+                        exe = gamedata[index+1]
+                        if "flatpak" in exe.lower() or "appimage" in exe.lower():
+                            exe = None
+                            break
+                        continue
+                    elif gamedata[index] == '\\x01StartDir':
+                        path = gamedata[index+1]
+                        continue
+                    else:
+                        continue
+
+                if exe:
+                    games.append({"Name": name, "Exe": exe, "Path": path})
+            return {"status": "success", "games": games}
+
+        except Exception as e:
+            decky.logger.error(str(e))
+            return {"status": "error", "message": str(e)}
+
 
     async def log_error(self, error: str) -> None:
         decky.logger.error(f"FRONTEND: {error}")
